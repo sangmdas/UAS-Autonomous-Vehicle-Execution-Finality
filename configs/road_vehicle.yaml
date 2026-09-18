@@ -1,0 +1,12 @@
+profile: road-vehicle-emergency-scene
+vehicle_id: AV-1
+incident_id: INC-77
+scene_epoch: 3
+policy_epoch: 4
+revocation_epoch: 6
+q_required: 2
+localization_margin_m: 1.0
+permitted_exception_classes:
+  - CROSS_RED
+  - REVERSE_SHORT
+hard_safety_required: true

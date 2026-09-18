@@ -1,0 +1,24 @@
+profile: red-team-stress
+seed: 20260918
+iterations:
+  randomized_handover: 1000
+  replay_concurrency: 50
+attacks:
+  parameter_substitution: true
+  sink_substitution: true
+  context_substitution: true
+  replay: true
+  policy_epoch_race: true
+  revocation_epoch_race: true
+  receipt_store_failure: true
+  fragment_loss: true
+  fragment_corruption: true
+  fragment_cross_session_mix: true
+  public_anchor_interval0_forgery: true
+  late_aer_injection: true
+  wrong_epoch_aer: true
+  wrong_device_aer: true
+  stale_daa_resolution: true
+  new_intruder_after_authorization: true
+  duplicate_scene_evidence_source: true
+  split_brain_handover: true

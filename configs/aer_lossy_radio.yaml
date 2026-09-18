@@ -1,0 +1,14 @@
+profile: aer-lossy-radio
+interval_ms: 1000
+disclosure_delay_intervals: 3
+observer_clock_uncertainty_ms: 500
+chain_length: 4096
+aer_tag_bits: 64
+network:
+  packet_loss_probability: 0.10
+  packet_reorder_probability: 0.02
+  duplicate_probability: 0.01
+invariants:
+  late_records_discarded: true
+  lost_kdr_recoverable_from_later_kdr: true
+  public_k0_not_tag_secret: true

@@ -1,0 +1,17 @@
+profile: uas-reference
+candidate_act:
+  device_id: uas:TEST-001
+  act_class: PAYLOAD_RELEASE
+  sink_id: payload-latch-1
+  authority_ref: AUTH-7
+  policy_epoch: 7
+  revocation_epoch: 9
+  expiry_ms: 2000000
+context:
+  geofence: G12
+  mission_phase: DELIVERY
+  payload_locked: true
+params:
+  drop_zone: DZ-7
+  altitude_m: 12.0
+  speed_mps: 2.0

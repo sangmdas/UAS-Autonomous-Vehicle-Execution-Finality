@@ -1,0 +1,37 @@
+{
+  "bpc": {
+    "act_class": "PAYLOAD_RELEASE",
+    "act_digest": "238edd2f71c6639c47119aa8803353a466713335fd993c30707f3c4c407729f1",
+    "authority_ref": "AUTH-V1",
+    "binding_trunc": "3f65096f7e7f3790938bd595",
+    "context_digest": "ef2756be3537adc17307c6814726d476745fbafe06f6fea64e68ebea48376773",
+    "device_id": "uas:VECTOR-1",
+    "expiry_ms": 2000000,
+    "freshness": "nonce-vector-1",
+    "policy_epoch": 3,
+    "revocation_epoch": 5,
+    "sink_id": "latch-1",
+    "tag": "677a45238d5339bf8321d921"
+  },
+  "candidate_act": {
+    "act_class": "PAYLOAD_RELEASE",
+    "act_id": "act-vector-1",
+    "authority_ref": "AUTH-V1",
+    "context": {
+      "geofence": "G1",
+      "phase": "DELIVERY"
+    },
+    "device_id": "uas:VECTOR-1",
+    "expiry_ms": 2000000,
+    "nonce": "nonce-vector-1",
+    "params": {
+      "altitude_m": 10,
+      "drop_zone": "DZ-1"
+    },
+    "policy_epoch": 3,
+    "revocation_epoch": 5,
+    "sink_id": "latch-1"
+  },
+  "root_key_hex": "0101010101010101010101010101010101010101010101010101010101010101",
+  "session_nonce": "vector-session"
+}

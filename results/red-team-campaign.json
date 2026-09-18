@@ -1,0 +1,11 @@
+{
+  "dual_authority_violations": 0,
+  "iterations": 5000,
+  "schedule_distribution": {
+    "after_commit": 1246,
+    "after_enable": 1241,
+    "after_prepare": 1257,
+    "complete": 1256
+  },
+  "seed": 20260918
+}

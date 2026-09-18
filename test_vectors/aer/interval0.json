@@ -1,0 +1,26 @@
+{
+  "K_0_hex": "7836ed64b43cdf8eb7f50e5798b0bd2f",
+  "K_N_hex": "3270b54308182dc6e6351f4ba619c878",
+  "K_prime_0_hex": "fbdf35c7e98a71398b5ff912dbc54f9b",
+  "N": 8,
+  "aer": {
+    "act_class": "PAYLOAD_RELEASE",
+    "decision": "ALLOW",
+    "device_id": "uas:VECTOR-1",
+    "epoch_id": "EV-1",
+    "header": "307c5041594c4f41445f52454c454153457c414c4c4f577c4c415443487c31",
+    "interval": 0,
+    "receipt_counter": 1,
+    "sink_class": "LATCH",
+    "tag": "8526951e5c493044"
+  },
+  "device_id": "uas:VECTOR-1",
+  "epoch_id": "EV-1",
+  "kdr": {
+    "epoch_id": "EV-1",
+    "evidence_interval": 0,
+    "key": "742766cbc5527a0fb9670e82d61b195c",
+    "key_index": 1
+  },
+  "master_seed_hex": "0303030303030303030303030303030303030303030303030303030303030303"
+}

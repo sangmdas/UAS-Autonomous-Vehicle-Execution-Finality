@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this reference implementation in technical evaluation, cite the repository and associated execution-finality specification/disclosure."
+title: "UAS / Autonomous-Vehicle Execution-Finality Reference"
+version: 0.1.0
+authors:
+  - family-names: Das
+    given-names: Sangam
+date-released: 2026-09-18

@@ -1,0 +1,54 @@
+{
+  "fragments": [
+    {
+      "auth": "3d1df459bcf3bf17",
+      "index": 0,
+      "payload": "7b22616374223a225041594c",
+      "root": "babad4c85a7803c4bcb5016d74105ad10b329c62c36c58ad87f024619f6f9961",
+      "session_id": "frag-vector",
+      "total": 6
+    },
+    {
+      "auth": "d99e4b1565a661b4",
+      "index": 1,
+      "payload": "4f41445f52454c4541534522",
+      "root": "babad4c85a7803c4bcb5016d74105ad10b329c62c36c58ad87f024619f6f9961",
+      "session_id": "frag-vector",
+      "total": 6
+    },
+    {
+      "auth": "c002d627af50e8cb",
+      "index": 2,
+      "payload": "2c22636f756e746572223a37",
+      "root": "babad4c85a7803c4bcb5016d74105ad10b329c62c36c58ad87f024619f6f9961",
+      "session_id": "frag-vector",
+      "total": 6
+    },
+    {
+      "auth": "b99b8745998029eb",
+      "index": 3,
+      "payload": "2c2270726f6f66223a226672",
+      "root": "babad4c85a7803c4bcb5016d74105ad10b329c62c36c58ad87f024619f6f9961",
+      "session_id": "frag-vector",
+      "total": 6
+    },
+    {
+      "auth": "b235e7d13e769281",
+      "index": 4,
+      "payload": "61676d656e742d766563746f",
+      "root": "babad4c85a7803c4bcb5016d74105ad10b329c62c36c58ad87f024619f6f9961",
+      "session_id": "frag-vector",
+      "total": 6
+    },
+    {
+      "auth": "0c51cbc363a48448",
+      "index": 5,
+      "payload": "72227d",
+      "root": "babad4c85a7803c4bcb5016d74105ad10b329c62c36c58ad87f024619f6f9961",
+      "session_id": "frag-vector",
+      "total": 6
+    }
+  ],
+  "key_hex": "0202020202020202020202020202020202020202020202020202020202020202",
+  "payload_hex": "7b22616374223a225041594c4f41445f52454c45415345222c22636f756e746572223a372c2270726f6f66223a22667261676d656e742d766563746f72227d"
+}

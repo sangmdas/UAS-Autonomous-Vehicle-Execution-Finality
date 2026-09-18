@@ -1,0 +1,337 @@
+[
+  {
+    "path": ".github/workflows/ci.yml",
+    "bytes": 546,
+    "sha256": "db854f666e27bcbb8ee7d7a17994a81b0c8fa1488add8f07492fce71bf828c4d"
+  },
+  {
+    "path": ".gitignore",
+    "bytes": 76,
+    "sha256": "ec385bd7df3ef2a51414050a8a4747cac13143ea2092e59d1a025f08143bf503"
+  },
+  {
+    "path": "ARCHITECTURE.md",
+    "bytes": 1179,
+    "sha256": "4d422f85e6172fd841e64cbb187c769387c225a6e122354d8dce498aa8b839fb"
+  },
+  {
+    "path": "BENCHMARKS.md",
+    "bytes": 919,
+    "sha256": "7ff5142e34be18dcd843abd86f5449663ff21072d0a7065fcea2d85854480e3f"
+  },
+  {
+    "path": "CITATION.cff",
+    "bytes": 335,
+    "sha256": "fcb7edd672875029c6702a14a3c8d7c23bf02c56f13bbc7bb07c44392b60fdd5"
+  },
+  {
+    "path": "FAULT-INJECTION.md",
+    "bytes": 1323,
+    "sha256": "6a1029afa5ee226ab6a0d186bf3c1458b52833052953dd70ec1113d37ac6bb99"
+  },
+  {
+    "path": "IPR-NOTICE.md",
+    "bytes": 1078,
+    "sha256": "fcf0c5190c35a7052c5f4eed148836ab02d5140781c77f2ce1199f47d94ba45f"
+  },
+  {
+    "path": "LICENSE.md",
+    "bytes": 2296,
+    "sha256": "aa6dc19963e85a82764ee63d39ccd7e084b1b130bcfa5d90356c4b74bb401388"
+  },
+  {
+    "path": "LIMITATIONS.md",
+    "bytes": 9196,
+    "sha256": "7bc83f60fc122131e75ae952c3a9fd76808b27efcc1c74456df5b08986bbc61a"
+  },
+  {
+    "path": "README.md",
+    "bytes": 5169,
+    "sha256": "880e6d906657a0eb3a09588ec2c9e076ed4634d0c776dc7924b73a7bb6144c45"
+  },
+  {
+    "path": "RED-TEAM-MODE.md",
+    "bytes": 6410,
+    "sha256": "4aefdbf2c8e9b493f9128c734a2f6508deace5977e294ca714baca3ee9e4da74"
+  },
+  {
+    "path": "RESULTS.md",
+    "bytes": 1776,
+    "sha256": "da60c20415280e9421528f3c0b08c09845912f22bd3899ebd10b80995691f9bf"
+  },
+  {
+    "path": "SECURITY.md",
+    "bytes": 579,
+    "sha256": "6bc5a94f46004f79b8232707d3ab18d51d31c68ae2d43a46195d0111c22a6481"
+  },
+  {
+    "path": "SYSTEM-VARIABLES.md",
+    "bytes": 2023,
+    "sha256": "4b91a2c6f8b0f8fbb5208d86eff3511eafe44643bc3ab4d7af8509b08d812449"
+  },
+  {
+    "path": "TEST-MATRIX.md",
+    "bytes": 2900,
+    "sha256": "42b9f98dc0132db1949af6fdf3ad34aa87fe7d0c8ed5fe0713db18f4858de093"
+  },
+  {
+    "path": "THREAT-MODEL.md",
+    "bytes": 1466,
+    "sha256": "984035f2b565e936b98b2042709bf315832685531a59298e18fa24d44f2366fb"
+  },
+  {
+    "path": "benchmarks/run_benchmarks.py",
+    "bytes": 3479,
+    "sha256": "7f8425c8d7a3343309003e0365906f3917352e7d1e70001c2675e38d732015f0"
+  },
+  {
+    "path": "configs/aer_lossy_radio.yaml",
+    "bytes": 370,
+    "sha256": "4f26fccb06159fb62a646b8cdc7dd02aa49d1591d27f16f9d7631a6bc71c0c8b"
+  },
+  {
+    "path": "configs/baseline.yaml",
+    "bytes": 504,
+    "sha256": "ba2f46e3767317b9d561fe3c9955f4ac3b518c0fca33a596040693448055a731"
+  },
+  {
+    "path": "configs/constrained_mcu.yaml",
+    "bytes": 414,
+    "sha256": "e70d6ebbd074749a5dcc5ef31b6359d20020cdf019ecc6818b4eea579ee1e9e7"
+  },
+  {
+    "path": "configs/daa.yaml",
+    "bytes": 287,
+    "sha256": "821ef1ee1ede53009b92cd150dc67fa2fecc71cac7d3055f6a4a0be90f5f71c4"
+  },
+  {
+    "path": "configs/redteam.yaml",
+    "bytes": 641,
+    "sha256": "5a7e6c1294f93392966d0614a4df543c764278b13446f40a961efe3ee267b3cc"
+  },
+  {
+    "path": "configs/road_vehicle.yaml",
+    "bytes": 255,
+    "sha256": "a3c70d1ad85cb7e3687d53944cb3c879cd6977a44da07562b3e24994caca3067"
+  },
+  {
+    "path": "configs/uas.yaml",
+    "bytes": 341,
+    "sha256": "4e37f20b25641ef2615f8fae2c6bb66c372e4a5f15735f4b1005bc2a83b1ee14"
+  },
+  {
+    "path": "pyproject.toml",
+    "bytes": 624,
+    "sha256": "905a0a6a43596c016fdafef1eb0b1a4407bafb30159c033d14c2ab3c4f5bd478"
+  },
+  {
+    "path": "results/benchmark-console.txt",
+    "bytes": 1246,
+    "sha256": "dcc5d94e80584827896b7d3cec7a6ab1872be1fccd5c6737feac255357ff25d6"
+  },
+  {
+    "path": "results/benchmark-results.json",
+    "bytes": 1245,
+    "sha256": "9683313e312bb5f48096e3de61a6b5ff62efd88ad0a4b21b0bc38db24e7409e8"
+  },
+  {
+    "path": "results/red-team-campaign.json",
+    "bytes": 213,
+    "sha256": "75c9514c033bcd50f75e94f26043b8e4cd0a103f905b1f90dbac78b18519a2b9"
+  },
+  {
+    "path": "results/test-summary.txt",
+    "bytes": 80,
+    "sha256": "c3f10a075adace0c7a32194c3773838ef13ba5e6a0b346089fcca6d53d5fb848"
+  },
+  {
+    "path": "run_all.sh",
+    "bytes": 195,
+    "sha256": "a6a9b19c4f537d950e8861aa26dea88c80fe25938d7b0223ecbe758413f4bcf4"
+  },
+  {
+    "path": "simulation/red_team_campaign.py",
+    "bytes": 1190,
+    "sha256": "69feb70cfd76269a68f5f22f8e5cc6598df9abdf614bcac3086c6acd82668a91"
+  },
+  {
+    "path": "spec/aer_kdr.md",
+    "bytes": 749,
+    "sha256": "eae521aa0151a529201a917c4907b8034d402f3ab93cb3fb8d09e935d5422b96"
+  },
+  {
+    "path": "spec/bpc.md",
+    "bytes": 644,
+    "sha256": "69cab8d6263ac3f9fe44b3a35616a0930b40bd7af3c539c1e37770b3892c066c"
+  },
+  {
+    "path": "spec/candidate_act.md",
+    "bytes": 755,
+    "sha256": "f2ae7a09b4dd538fa480489633508306964a5039fda587e62119542c4f074878"
+  },
+  {
+    "path": "spec/control_handover.md",
+    "bytes": 480,
+    "sha256": "54f6dcc836c418fe1ea62139f475b754a363f3c27b13a4f4afcaf1009a0d327b"
+  },
+  {
+    "path": "spec/daa_finality.md",
+    "bytes": 538,
+    "sha256": "dea4f665f446e7fb668d5deb535eb89adae1088ecd61b37ad7d7a509ff3b19ba"
+  },
+  {
+    "path": "spec/emergency_scene.md",
+    "bytes": 383,
+    "sha256": "1d0743f872daedb629153517f3fdc42068b4c54e139ce72d0d74af065a11496c"
+  },
+  {
+    "path": "src/ef_ref/__init__.py",
+    "bytes": 245,
+    "sha256": "d194f0bfa45838c4a61215a98159b1af2a7e93a1ccb9078d16b82f7dd583cc81"
+  },
+  {
+    "path": "src/ef_ref/adversary.py",
+    "bytes": 1219,
+    "sha256": "d2befbe83a92ca3eb330a29bc9ec59f02046519c0a32dfa1ad42b84abd36364e"
+  },
+  {
+    "path": "src/ef_ref/aer.py",
+    "bytes": 4618,
+    "sha256": "6c85d8a2b1bf811d11e1f5324eccafafef0bad7d9f544b51f2964e52c053ad30"
+  },
+  {
+    "path": "src/ef_ref/bpc.py",
+    "bytes": 2884,
+    "sha256": "312a6c299baf04a23c60b528eaa6e55535bf5d83936490047007b283c229faf7"
+  },
+  {
+    "path": "src/ef_ref/crypto.py",
+    "bytes": 1622,
+    "sha256": "88f6f5b1b2a56d3abc0849dbbdfbb5bce67eb20fc44c4fcc342cb4bb17150cab"
+  },
+  {
+    "path": "src/ef_ref/daa.py",
+    "bytes": 2329,
+    "sha256": "e312fa8fea943f34462cd184372c10996e44ee81c1725d1a6adf082615fa7111"
+  },
+  {
+    "path": "src/ef_ref/emergency_scene.py",
+    "bytes": 2365,
+    "sha256": "ae168971449a9a47ec624b8630ec4cdea821ed463ff8ceb2e414a5bf3b8a989e"
+  },
+  {
+    "path": "src/ef_ref/finality.py",
+    "bytes": 5158,
+    "sha256": "dc1faabaa19e6a4aa49f36ef55796673a48648bc44949b5656614fa87e05c0c4"
+  },
+  {
+    "path": "src/ef_ref/fragmentation.py",
+    "bytes": 1617,
+    "sha256": "c32abaa8714777c4d91944327338f24441e2b6a34c82eb245e2f7f8ab4bdc754"
+  },
+  {
+    "path": "src/ef_ref/handover.py",
+    "bytes": 2324,
+    "sha256": "c5a9140247c645820cd976d01c8b0f15bf44bfc9fdc89eb96a125552607faf16"
+  },
+  {
+    "path": "src/ef_ref/models.py",
+    "bytes": 2375,
+    "sha256": "39c3806aa03337abb53da289048233f8f119e1a49f1975d72fd7d5816ab95134"
+  },
+  {
+    "path": "src/ef_ref/receipt_store.py",
+    "bytes": 1641,
+    "sha256": "500605b65061ba7179124ab1a0aa60bfffe27c19a11b38da48656e487d3f834a"
+  },
+  {
+    "path": "src/ef_ref/replay_store.py",
+    "bytes": 607,
+    "sha256": "e8267fe3450067250ac6fbf7490ef2e4701c445b16d78e023e50f2bedb052cbe"
+  },
+  {
+    "path": "src/ef_ref/spatial.py",
+    "bytes": 1355,
+    "sha256": "b6f44a2ff4a1a4481232d9ec2214be33df1da34487181fec8cbf22f1b5b0baff"
+  },
+  {
+    "path": "test_vectors/aer/interval0.json",
+    "bytes": 757,
+    "sha256": "e1cdc0fa29a0b0f4d325797349f0689c02b814e914a47c848adf721ea948489c"
+  },
+  {
+    "path": "test_vectors/bpc/baseline.json",
+    "bytes": 1078,
+    "sha256": "05341bb399aedfd05a922751c586513df3cdf9fc30dce43a33212d2fd7bd27f1"
+  },
+  {
+    "path": "test_vectors/fragmentation/baseline.json",
+    "bytes": 1697,
+    "sha256": "4c56cbe0744adf8ab4d1075b872182468406c35d600aa80d7888b81879998245"
+  },
+  {
+    "path": "test_vectors/generate_vectors.py",
+    "bytes": 2487,
+    "sha256": "1d6dd396b62eeabbfdad2ccd921d67641e6da4e6645448510a37f93bb0f260d1"
+  },
+  {
+    "path": "tests/conftest.py",
+    "bytes": 1266,
+    "sha256": "1315b908e8b0d5ea582e5ce25ce3a0ec5938459400b7d84d18b309d529eac4bc"
+  },
+  {
+    "path": "tests/test_aer_redteam.py",
+    "bytes": 3765,
+    "sha256": "23e362163f85126f2876b5432c3859a952f0e201346578067dc6de4af5da6988"
+  },
+  {
+    "path": "tests/test_bpc_finality.py",
+    "bytes": 6266,
+    "sha256": "ca63ec73ce4c87c6820f9bca1fb8aabad9c271951ca95e01284b2485e430822a"
+  },
+  {
+    "path": "tests/test_bpc_key_separation.py",
+    "bytes": 494,
+    "sha256": "b332e86fbb3b3d0653b960e5701dba2d2a572ddd55151e55ac465a787aa46d87"
+  },
+  {
+    "path": "tests/test_daa_redteam.py",
+    "bytes": 2043,
+    "sha256": "562ac6e9475d173240fa9985d390d05e74873cd9986d418f34d711f91d9eca53"
+  },
+  {
+    "path": "tests/test_emergency_scene_redteam.py",
+    "bytes": 3243,
+    "sha256": "33d102a8c4833edf8043ddb8428e06467bc379e565c9022d2441bc39f03a9c36"
+  },
+  {
+    "path": "tests/test_fragmentation.py",
+    "bytes": 1417,
+    "sha256": "ef2467a546c34b0d7c279a1e6ea0f9faf884a6b331c5291f737b1ecc3256de86"
+  },
+  {
+    "path": "tests/test_handover_redteam.py",
+    "bytes": 2414,
+    "sha256": "a0a047bf7cd262a36e48f243612352065f269b2aaadb4638bd54447141c5a0f5"
+  },
+  {
+    "path": "tests/test_receipt_chain.py",
+    "bytes": 613,
+    "sha256": "35cb502cdd46cd9bdcdc63ca6f80b2841c5a992c2eba5ede8b6f7732688fa5e5"
+  },
+  {
+    "path": "tests/test_risk_math.py",
+    "bytes": 906,
+    "sha256": "13ea5ce9837f7389fdfceccf9c18332ec73c04b6f5903f57968bf7a45185b62c"
+  },
+  {
+    "path": "tests/test_safe_state.py",
+    "bytes": 531,
+    "sha256": "593858da5c98ddca215d80e932fef4f24a19ebc5bea97cc4357ac4ac5636617f"
+  },
+  {
+    "path": "tests/test_spatial.py",
+    "bytes": 1035,
+    "sha256": "c5665cd0437c6df9d656096c65850c624c0b80c9d3b8f0545872ad6eae906b96"
+  }
+]

@@ -1,0 +1,21 @@
+profile: baseline-reference
+purpose: deterministic local reference tests only
+crypto:
+  hash: SHA-256
+  hmac: HMAC-SHA-256
+  binding_bits: 96
+  authority_ref_bits: 64
+  bpc_tag_bits: 96
+  aer_tag_bits: 64
+execution:
+  policy_epoch: 7
+  revocation_epoch: 9
+  receipt_before_release: true
+  fail_closed_on_receipt_store_failure: true
+  single_use_nonce: true
+spatial:
+  distance_to_boundary_m: 60
+  position_uncertainty_m: 5
+  max_speed_mps: 15
+  reaction_latency_ms: 100
+  guaranteed_deceleration_mps2: 5
