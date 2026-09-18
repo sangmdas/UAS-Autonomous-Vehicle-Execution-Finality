@@ -1,0 +1,1373 @@
+{
+  "schema_version": "1.1",
+  "document": {
+    "title": "FAQ - UAS / Autonomous-Vehicle Execution Finality",
+    "subtitle": "Questions from standards reviewers, safety engineers, cryptographic reviewers, avionics engineers, autonomous-vehicle engineers, and red-team reviewers",
+    "author": "Sangam Das",
+    "affiliation": "Independent Inventor",
+    "contact": "info@sangamdas.com",
+    "date": "2026-09-18",
+    "status": "Informational companion material to an individual IETF Internet-Draft. Not a working-group product.",
+    "answer_posture": "The answers are intentionally conservative. They distinguish what the reference model demonstrates from what a production deployment would still need to prove.",
+    "core_principle": "Computation, authentication, or possession of a token does not by itself create authority to make a consequential act effective.",
+    "scope": {
+      "in_scope": [
+        "Civil UAS in the specific and certified categories and comparable national regimes",
+        "Civil autonomous road vehicles and other autonomous motion platforms",
+        "Reference model and adversarial test harness for selected execution-finality invariants"
+      ],
+      "out_of_scope": [
+        "Weapons, weapon release, targeting, and counter-UAS engagement",
+        "Airworthiness and certification requirements",
+        "Replacement of flight-control safety design or automotive safety controllers",
+        "Definition of legal rules or of which acts a regulator permits"
+      ]
+    },
+    "licensing": {
+      "text_license": "CC BY 4.0",
+      "code_license": "See repository LICENSE",
+      "patent_status": "Patent pending; patent rights expressly reserved and not licensed by publication alone",
+      "standards_posture": "Declared position is FRAND licensing consistent with BCP 79 should any part be adopted into an IETF standard"
+    },
+    "resources": {
+      "reference_implementation": "https://github.com/sangmdas/UAS-Autonomous-Vehicle-Execution-Finality",
+      "internet_draft": "https://datatracker.ietf.org/doc/draft-das-drip-uas-act-finality/",
+      "architectural_background": "https://zenodo.org/records/22082995"
+    },
+    "counts": {
+      "faqs_total": 93,
+      "faqs_v1_0": 60,
+      "faqs_added_v1_1": 33,
+      "categories": {
+        "architecture-principles": 3,
+        "authority-lifecycle-and-revocation": 5,
+        "binding-and-path-completeness": 5,
+        "broadcast-act-evidence": 5,
+        "claims-and-falsifiability": 2,
+        "comparison-with-existing-mechanisms": 4,
+        "constrained-implementation": 4,
+        "context-and-sensors": 3,
+        "control-authority-handover": 3,
+        "control-integration-and-safety": 5,
+        "deployment-and-scope": 6,
+        "detect-and-avoid": 2,
+        "drip-and-remote-id": 3,
+        "emergency-scene-profile": 1,
+        "encoding-canonicalization-truncation": 4,
+        "evidence-and-audit": 1,
+        "keys-and-trust": 2,
+        "licensing-and-ipr": 1,
+        "offline-operation-and-availability": 3,
+        "privacy-and-transparency": 3,
+        "protected-state-and-failure": 3,
+        "regulatory": 3,
+        "review-and-resources": 4,
+        "robustness-and-attack-surface": 2,
+        "standards-process": 2,
+        "standards-relevance": 2,
+        "terminology": 5,
+        "threat-model-and-residual-risk": 5,
+        "uas-profile": 2
+      },
+      "industry_sectors": 13,
+      "use_cases": 10
+    }
+  },
+  "faqs": [
+    {
+      "id": 1,
+      "category": "control-integration-and-safety",
+      "question": "Does execution finality sit inside the flight-control or drive-by-wire inner loop?",
+      "answer": [
+        "Not necessarily, and usually it should not.",
+        "The architecture is intended to separate: high-rate stabilization or control loops; lower-rate authorization, policy, and envelope decisions; and the final consequence-bearing boundary.",
+        "A 200-1000 Hz stabilization loop should not be forced to perform a full cryptographic authorization transaction for every control tick.",
+        "Instead, the preferred pattern is: slow / medium-rate authority decision -> protected verification -> bounded execution envelope / handle -> high-rate local control within that envelope.",
+        "The high-rate controller can continue operating locally as long as the current act remains inside the already verified envelope. Revalidation is required when the envelope expires, a protected generation changes, the act leaves the permitted range, or another load-bearing condition changes.",
+        "The reference architecture therefore distinguishes per-act finality from pre-authorized high-rate envelope execution.",
+        "A production system must still measure worst-case execution time on the target MCU/SoC/FPGA and demonstrate that the selected enforcement placement does not violate control-loop deadlines."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 2,
+      "category": "control-integration-and-safety",
+      "question": "What is the exact latency overhead on a low-power microcontroller?",
+      "answer": [
+        "The repository does not claim a universal microsecond figure.",
+        "The correct answer depends on processor architecture, clock rate, hardware crypto support, memory hierarchy, persistent-state mechanism, secure-element latency, serialization format, transport framing, number of protected lookups, receipt persistence method, and whether the decision is a cold-path authorization or a hot-path envelope check.",
+        "The reference implementation measures software-path latency only. Those measurements are useful for relative engineering comparison, but they are not a substitute for target-hardware WCET analysis.",
+        "A production implementation should report at minimum: T_verify = T_parse + T_lookup + T_hash + T_MAC + T_replay + T_current_state + T_receipt_commit + T_compare, and separately report worst-case and percentile results for the actual deployment hardware."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 3,
+      "category": "control-integration-and-safety",
+      "question": "Could the finality layer destabilize an aircraft or vehicle if authorization becomes unavailable?",
+      "answer": [
+        "A correct deployment should not translate \"authority unavailable\" into \"physically freeze the vehicle.\"",
+        "The architecture distinguishes permission-expanding acts from a pre-authorized Safe-State Set. Examples may include hover, loiter, controlled braking, minimal-risk stop, controlled descent, return-to-home, reduced-speed mode, payload lock, or another platform-defined safety action.",
+        "The exact Safe-State Set is not defined universally by this repository. It must be supplied by the platform safety architecture.",
+        "The intended rule is: loss of fresh authority must not silently expand authority, but it also must not remove a separately pre-authorized safety action that is required to reduce physical risk."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 4,
+      "category": "control-integration-and-safety",
+      "question": "What happens if a coordinated multi-aircraft decision log becomes unreachable?",
+      "answer": [
+        "Silence must not be interpreted as approval.",
+        "However, \"no commit on silence\" does not require an unsafe stationary HOLD. A deployment may define a bounded offline or degraded-mode policy: coordinated authority unavailable -> do not accept new coordinated expansion -> retain only the previously authorized safe envelope -> execute local deconfliction, loiter, return, or landing.",
+        "The important invariant is that loss of the coordination log cannot create new authority.",
+        "Liveness is handled by the Safe-State Set, bounded residual authority, local collision-avoidance rules, and deployment-specific degraded-mode policy, not by converting missing authorization into permission."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 5,
+      "category": "control-integration-and-safety",
+      "question": "Is this safety-over-liveness design too conservative?",
+      "answer": [
+        "The architecture is deliberately conservative at the authority boundary, but it does not require the physical controller to stop functioning.",
+        "The design separates two questions: may the system perform a new consequence-expanding act, and what safety-preserving behavior remains permitted if the answer is no?",
+        "A deployment that simply freezes an aircraft or vehicle in a hazardous environment would be poorly designed even if its authorization logic were cryptographically correct.",
+        "Execution finality is therefore intended to be composed with, not replace, the platform's safety controller and minimal-risk behavior."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 6,
+      "category": "privacy-and-transparency",
+      "question": "Does \"privacy mode\" defeat the transparency purpose of Act Evidence Records?",
+      "answer": [
+        "It can, if designed carelessly.",
+        "The purpose of an UNSPECIFIED or privacy-preserving act class is not to hide whether a protected decision occurred. It is to avoid broadcasting more sensitive operational detail than is necessary.",
+        "A privacy-preserving record can still expose that a protected decision occurred, the decision class, the relevant device or epoch binding, timing information within the permitted granularity, an act commitment, a sink or sink-class commitment, and later-verifiable authenticity.",
+        "A privacy profile should therefore distinguish publicly verifiable decision evidence from public disclosure of every act parameter.",
+        "Where a regulator, auditor, or authorized investigator requires full detail, the deployment may retain a protected local receipt or selectively disclose the committed act under the applicable legal process.",
+        "The repository does not claim that one privacy profile is appropriate for all jurisdictions."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 7,
+      "category": "privacy-and-transparency",
+      "question": "If observers cannot see the exact camera activation event, what is being audited?",
+      "answer": [
+        "Potentially three different layers: public evidence, meaning a compact record showing that a protected decision occurred; protected local evidence, meaning the full Candidate Act and receipt retained in protected storage; and authorized later disclosure, meaning a mechanism for proving that the full act matches the earlier public commitment.",
+        "This allows the system to separate public transparency from unnecessary real-time disclosure of sensitive operational detail.",
+        "The important cryptographic requirement is that later disclosure must match the earlier commitment and must not allow the historical record to be rewritten."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 8,
+      "category": "context-and-sensors",
+      "question": "Does spatial finality require GNSS + VIO + odometry in every vehicle?",
+      "answer": [
+        "No. The architecture should not mandate a fixed sensor stack.",
+        "A rule such as \"q-of-n independent or sufficiently diverse agreeing sources\" is a profile choice, not a universal requirement that every deployment use GNSS, VIO, odometry, radar, LiDAR, or any particular technology.",
+        "A vision-centric platform may instead use multiple independently evaluated sources or confidence channels within its own architecture, provided the deployment can justify the relevant independence and uncertainty model.",
+        "The core requirement is that the protected boundary must have a defined, auditable basis for deciding whether the context required by the act is sufficiently trustworthy.",
+        "The repository should not be read as prescribing a particular commercial sensor strategy."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 9,
+      "category": "context-and-sensors",
+      "question": "What if one localization source becomes unavailable or degraded?",
+      "answer": [
+        "The profile should specify degradation behavior. Possible responses include reducing the permitted motion envelope, increasing the uncertainty margin, requiring a shorter revalidation interval, prohibiting outward motion near a protected boundary, switching to a lower-authority mode, using a Safe-State action, or denying the act if the minimum evidence threshold is no longer met.",
+        "A missing sensor must not automatically be treated as a zero-error sensor.",
+        "UNKNOWN and EMPTY are intentionally distinct states."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 10,
+      "category": "context-and-sensors",
+      "question": "Could strict multi-source agreement become a denial-of-service vector?",
+      "answer": [
+        "Yes, if implemented naively.",
+        "An attacker may attempt to degrade one sensor, create disagreement, or force the system into repeated revalidation.",
+        "That is why the policy must separate safety-critical disagreement, expected sensor degradation, source independence, source health, uncertainty expansion, and safe degraded operation.",
+        "The finality layer should not attempt to solve sensor fusion by itself. It consumes a protected context decision and applies explicit fail-safe policy to the consequence-bearing act."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 11,
+      "category": "constrained-implementation",
+      "question": "How much memory does deterministic encoding and BPC verification require on a small MCU?",
+      "answer": [
+        "The repository does not claim one fixed footprint. A constrained implementation does not need to instantiate a large general-purpose object model.",
+        "Possible implementation strategies include fixed-layout structs, compact integer keys, streaming parsers, preallocated buffers, profile-specific field sets, fixed-size digests, precomputed authority tables, and hardware HMAC/SHA acceleration.",
+        "The IETF-facing canonical representation defines interoperability semantics. A production embedded implementation may use a fixed internal representation as long as the externally committed bytes are canonical and unambiguous.",
+        "The correct engineering question is not \"can a full desktop CBOR stack run at the actuator?\" but \"what is the smallest deterministic representation and verification path that preserves the required binding semantics on the target hardware?\""
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 12,
+      "category": "constrained-implementation",
+      "question": "Must every Finality Sink parse CBOR?",
+      "answer": [
+        "No. A Finality Sink may consume a compact, pre-parsed, sink-local capability emitted by the protected enforcement domain: Candidate Act or BPC or richer object -> PED verification -> fixed-size sink capability -> Finality Sink.",
+        "The sink can therefore remain extremely small. The full canonical object need not be decoded independently by every actuator microcontroller."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 13,
+      "category": "constrained-implementation",
+      "question": "Can the BPC fit inside an 8-byte CAN frame?",
+      "answer": [
+        "Not in every profile, and that should not be claimed universally.",
+        "Possible deployment approaches include a profile-specific reduced BPC, authenticated fragmentation, CAN FD, transport-layer segmentation, a short local Authority Reference plus protected local state, a sink-local capability instead of the original BPC, or a higher-layer gateway that verifies the larger object and emits a compact actuator token.",
+        "Classic CAN constraints are therefore an implementation or profile question, not a reason to weaken the binding semantics."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 14,
+      "category": "comparison-with-existing-mechanisms",
+      "question": "Why not simply use CAN authentication or a MAC on the command?",
+      "answer": [
+        "A MAC answers one question: was this message created by an entity holding the key?",
+        "Execution finality asks additional questions: is this the exact act that was authorized; is it intended for this sink; is the authority still current; has the nonce already been consumed; has policy or revocation state changed; is the act still inside the authorized envelope; is this controller still the current controller; and can an alternate path bypass the intended sink?",
+        "Message authentication is necessary in many deployments, but it is not equivalent to final effectuation authorization."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 15,
+      "category": "authority-lifecycle-and-revocation",
+      "question": "What happens when a high-rate trajectory envelope is revoked?",
+      "answer": [
+        "A production profile should define an immediate transition rule: current envelope valid -> high-rate execution permitted -> revocation or epoch change -> no new permission-expanding setpoints -> enter minimal-risk or Safe-State behavior.",
+        "The exact transition may depend on current speed, road geometry, airspace, obstacle state, braking distance, and controller architecture.",
+        "The important property is that revocation does not require continuing to honor stale permission merely to preserve liveness."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 16,
+      "category": "authority-lifecycle-and-revocation",
+      "question": "Does a revocation instantly remove every control output?",
+      "answer": [
+        "It should not remove outputs that are independently authorized as necessary safety actions.",
+        "For example, a vehicle whose forward-motion envelope is revoked may still need authority to brake.",
+        "This is why the architecture distinguishes ordinary consequence-expanding authority, envelope authority, and pre-authorized safety-increasing actions.",
+        "Fail-closed at the authority layer should not mean \"disable the laws of control.\""
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 17,
+      "category": "authority-lifecycle-and-revocation",
+      "question": "How is TOCTOU handled between an early authorization check and effectuation?",
+      "answer": [
+        "The deciding protected state is re-read close to the final commit. A representative ordering is: static verification, then read current protected state, then consume freshness or nonce, then commit receipt and state update, then release the bounded capability, then effectuation.",
+        "An early successful check therefore does not guarantee later effectuation if a relevant generation changes before the protected commit.",
+        "This is one of the main differences between \"fresh observation\" and \"commit-time guarantee.\""
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 18,
+      "category": "authority-lifecycle-and-revocation",
+      "question": "What if revocation changes one microsecond after the atomic commit?",
+      "answer": [
+        "No architecture can make a decision depend on information that does not yet exist.",
+        "The relevant property is a well-defined linearization point. A deployment must define when authority is considered consumed, when revocation becomes effective, whether a released capability has a bounded lifetime, whether the sink must recheck an epoch, and how much residual exposure is acceptable.",
+        "For high-risk actions, the capability can be extremely short-lived and sink-local."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 19,
+      "category": "authority-lifecycle-and-revocation",
+      "question": "What prevents replay of a valid execution handle?",
+      "answer": [
+        "Single-use handles are bound to protected replay state. The reference model expects: nonce unused -> atomic consume -> receipt commit -> capability release.",
+        "Concurrent attempts against the same nonce must not result in multiple successful releases.",
+        "The repository includes adversarial concurrency testing for this property."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 20,
+      "category": "binding-and-path-completeness",
+      "question": "Why is the sink binding necessary if the act is already signed?",
+      "answer": [
+        "Because the same logical act may have different consequences at different sinks.",
+        "A valid authorization for a camera-enable sink must not automatically be reusable at a payload-release sink or a motion-admission sink.",
+        "The sink is therefore a load-bearing part of the authority basis."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 21,
+      "category": "binding-and-path-completeness",
+      "question": "What if an attacker finds an alternate path around the Finality Sink?",
+      "answer": [
+        "Then the security claim for that consequence path fails. This is not hidden by the architecture. Path completeness is a protected assumption.",
+        "A production deployment must analyze alternate buses, DMA, debug paths, maintenance interfaces, firmware update paths, redundant controllers, power-gating paths, emergency override paths, and direct actuator interfaces.",
+        "Execution finality only controls effects that actually traverse the protected boundary."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 22,
+      "category": "binding-and-path-completeness",
+      "question": "Does the repository prove hardware non-bypassability?",
+      "answer": [
+        "No. The repository is a software reference model and red-team harness.",
+        "It can demonstrate binding logic, state-machine ordering, replay behavior, generation checks, fragment handling, evidence-key behavior, authority-handover logic, and modeled fault behavior.",
+        "It cannot prove physical path completeness on an aircraft or vehicle it has never been integrated into."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 23,
+      "category": "broadcast-act-evidence",
+      "question": "Does a valid AER prove that the physical act occurred?",
+      "answer": [
+        "No. A valid Act Evidence Record proves only what the evidence construction is designed to prove, for example that the protected enforcement domain authenticated a particular decision record under the modeled key and timing assumptions.",
+        "It does not by itself prove that a motor moved, that a payload physically released, that a camera actually captured an image, that a vehicle changed trajectory, or that a downstream actuator did not subsequently fail.",
+        "Evidence of a protected decision and evidence of physical occurrence are separate problems."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 24,
+      "category": "broadcast-act-evidence",
+      "question": "Why use delayed disclosure for AER/KDR instead of signing every act?",
+      "answer": [
+        "The design goal is compact observer-verifiable evidence on constrained broadcast links.",
+        "Delayed disclosure can reduce the per-record public-key overhead while preserving a temporal property: the observer can later verify that the record existed before the relevant secret was disclosed.",
+        "The trade-offs include delayed verification, clock assumptions, disclosure scheduling, packet loss, key-chain management, and late-record rejection rules.",
+        "It is therefore an optional evidence profile, not a universal replacement for digital signatures."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 25,
+      "category": "broadcast-act-evidence",
+      "question": "Can the public chain anchor be used to forge interval 0?",
+      "answer": [
+        "It must not be. The corrected construction separates K_seed, the never-disclosed protected master seed; K_N, the terminal chain value derived from K_seed; K_i = F(K_(i+1)); K_0 as a public commitment only; and K'_i = F'(K_(i+1)) as the interval tag key.",
+        "The public K_0 is not itself an AER authentication secret and must not be transformed into the first interval tag key.",
+        "The repository includes negative testing for this specific indexing error."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 26,
+      "category": "broadcast-act-evidence",
+      "question": "What if one or more KDR disclosures are lost?",
+      "answer": [
+        "A later disclosed chain value can recover earlier required chain values by repeated application of the one-way function. This is one reason for the reverse-chain structure.",
+        "Packet loss therefore need not make all earlier AERs unverifiable, although the exact retention and recovery window is profile-dependent."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 27,
+      "category": "broadcast-act-evidence",
+      "question": "How much clock synchronization does delayed disclosure require?",
+      "answer": [
+        "The observer must have a bounded timing uncertainty model.",
+        "A receiver should reject or discard an AER when its arrival time is too late to establish that the record was received before the corresponding disclosure became usable by an attacker.",
+        "The exact Delta, disclosure delay d, and allowed clock uncertainty are deployment parameters.",
+        "The architecture should not pretend that delayed-disclosure evidence is secure without a defensible time model."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 28,
+      "category": "protected-state-and-failure",
+      "question": "What happens if the protected receipt store fails?",
+      "answer": [
+        "For a profile that requires durable receipt commitment before release, the rule is: no durable receipt, no ordinary capability release.",
+        "This prevents \"effectuate first, discover later that the audit or consume state never committed.\"",
+        "A separate Safe-State path may remain available if configured."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 29,
+      "category": "protected-state-and-failure",
+      "question": "Could receipt persistence itself become a denial-of-service target?",
+      "answer": [
+        "Yes. That is a real trade-off.",
+        "Mitigations may include redundant protected storage, bounded in-memory protected journals, hardware monotonic counters, failover storage, preallocated log segments, degradation to a smaller Safe-State Set, and explicit availability profiles.",
+        "The architecture does not claim that persistence is free. It makes the failure semantics explicit."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 30,
+      "category": "protected-state-and-failure",
+      "question": "Why distinguish UNKNOWN from EMPTY?",
+      "answer": [
+        "Because missing state and confirmed absence are different security conditions.",
+        "EMPTY means the protected lookup completed and found no entries. UNKNOWN means the lookup could not establish the state.",
+        "Treating UNKNOWN as EMPTY can create authority from missing evidence.",
+        "For load-bearing authorization state, the conservative rule is generally: UNKNOWN implies no permission-expanding effectuation."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 31,
+      "category": "detect-and-avoid",
+      "question": "How does the design handle DAA traffic that changes after a maneuver was computed?",
+      "answer": [
+        "The maneuver authority can be bound to a canonical conflict set and Resolution Epoch.",
+        "If a new higher-risk intruder appears, an existing track materially changes, uncertainty grows beyond the permitted bound, or the Resolution Epoch is superseded, the old maneuver authorization is no longer applicable at the motion-admission boundary.",
+        "The planner may recompute immediately, but computation alone does not preserve the old authority."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 32,
+      "category": "detect-and-avoid",
+      "question": "Could DAA revalidation cause oscillation or repeated denial?",
+      "answer": [
+        "Yes, if the environment changes rapidly or the policy is poorly tuned.",
+        "Execution finality does not solve trajectory planning stability. A deployment may need hysteresis, bounded hold intervals, local collision-avoidance priority, emergency safe maneuvers, uncertainty-aware envelopes, and profile-specific revalidation thresholds.",
+        "The finality layer ensures that stale basis does not silently remain authority."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 33,
+      "category": "emergency-scene-profile",
+      "question": "How is q-of-n emergency-scene corroboration protected against correlated sensors?",
+      "answer": [
+        "The count should not blindly treat every message as independent evidence.",
+        "The profile should account for common physical source, common upstream processor, same credential lineage, same sensor modality, same communication dependency, and known correlation domains.",
+        "Two channels carrying the same underlying observation should not automatically count as two independent confirmations.",
+        "The repository includes adversarial testing around correlated evidence."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 34,
+      "category": "threat-model-and-residual-risk",
+      "question": "What if all context sensors are consistently wrong?",
+      "answer": [
+        "Then a purely context-based protected decision can still be wrong. Execution finality is not a magical source of truth.",
+        "If every trusted input feeding the protected predicate is coherently compromised, the protected boundary may authorize an act on false context.",
+        "This is a residual risk and should be stated explicitly.",
+        "The architecture reduces unauthorized effectuation relative to its trusted inputs; it does not prove those inputs are physically correct."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 35,
+      "category": "threat-model-and-residual-risk",
+      "question": "What if the PED itself is compromised?",
+      "answer": [
+        "If the protected keys, monotonic state, or verification logic are compromised, the security assumptions are violated.",
+        "Possible production mitigations include secure boot, measured boot, hardware key isolation, attestation, redundancy, an independent safety MCU, rollback resistance, protected update paths, tamper response, and key rotation.",
+        "The reference harness does not claim to solve compromise of the root of enforcement itself."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 36,
+      "category": "comparison-with-existing-mechanisms",
+      "question": "Why not rely only on remote attestation?",
+      "answer": [
+        "Attestation answers a different question. Attestation can provide evidence about software identity, measured state, device configuration, or execution environment.",
+        "Execution finality asks whether this exact pending act may become effective at this sink under the current authority state.",
+        "A correctly attested system can still attempt an unauthorized act. Attestation may therefore be an input to execution finality, not a substitute for it."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 37,
+      "category": "comparison-with-existing-mechanisms",
+      "question": "Why not rely only on OAuth, signed commands, certificates, or ACLs?",
+      "answer": [
+        "These mechanisms can establish important authorization context, but they often authorize a principal, a session, an API, a resource class, or a general operation.",
+        "Execution finality narrows the final question to exact act, plus exact sink, plus current authority state, plus freshness, plus current context.",
+        "The architecture is intended to complement existing authorization systems rather than replace them."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 38,
+      "category": "offline-operation-and-availability",
+      "question": "Does the architecture require a trusted centralized authority online for every act?",
+      "answer": [
+        "No. Profiles may use cached bounded authority, local protected epochs, short-lived grants, pre-authorized envelopes, offline Safe-State behavior, and delayed synchronization.",
+        "The key requirement is that offline operation have an explicit bounded authority model rather than silently treating stale cached authority as indefinitely current."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 39,
+      "category": "offline-operation-and-availability",
+      "question": "What is the maximum offline window?",
+      "answer": [
+        "There is no universal value.",
+        "The acceptable residual exposure depends on vehicle speed, stopping distance, airspace or road geometry, update frequency, revocation urgency, mission class, consequence severity, and available Safe-State actions.",
+        "The repository exposes such values as deployment parameters rather than claiming a single safe constant."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 40,
+      "category": "offline-operation-and-availability",
+      "question": "Does fail-closed create a denial-of-service vulnerability?",
+      "answer": [
+        "Potentially, yes. Any security boundary that can withhold authority can become a target for availability attacks.",
+        "The architecture therefore requires explicit consideration of safe degraded modes, bounded cached authority, local safety autonomy, redundant protected state, transport resilience, replay-safe retry, and the distinction between permission-expanding and safety-reducing actions.",
+        "Security and liveness must be engineered together."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 41,
+      "category": "robustness-and-attack-surface",
+      "question": "Can a malicious planner spam the PED with verification requests?",
+      "answer": [
+        "Yes. A production implementation may need rate limiting, admission control, priority classes, per-controller quotas, bounded queues, constant-space parsing, authenticated early rejection, and separate safety-critical and non-critical paths.",
+        "The repository focuses on authorization semantics, not full resource-exhaustion resistance."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 42,
+      "category": "robustness-and-attack-surface",
+      "question": "What prevents a large Candidate Act from becoming a parser attack surface?",
+      "answer": [
+        "A constrained profile should define maximum object size, maximum nesting, permitted fields, canonical types, integer ranges, fixed-length digests, deterministic ordering, and rejection of unknown or duplicate critical fields.",
+        "A safety-critical implementation should not use an unrestricted general-purpose parser at the actuation boundary."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 43,
+      "category": "encoding-canonicalization-truncation",
+      "question": "Is deterministic CBOR mandatory?",
+      "answer": [
+        "The important requirement is deterministic, unambiguous canonicalization for whatever representation is normatively selected.",
+        "If the IETF profile uses deterministic CBOR, interoperability tests should verify the exact byte representation.",
+        "An implementation may use a different internal structure as long as the protected digest is calculated over the required canonical external representation."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 44,
+      "category": "encoding-canonicalization-truncation",
+      "question": "What happens when two semantically equivalent encodings produce different bytes?",
+      "answer": [
+        "That is precisely why a canonical representation is required. The authority basis must not depend on parser-specific formatting choices.",
+        "If two values are intended to be semantically identical under the profile, they must canonicalize to the same committed representation. If the profile does not define that equivalence, they should be treated as different acts."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 45,
+      "category": "encoding-canonicalization-truncation",
+      "question": "What if a compact truncated binding collides?",
+      "answer": [
+        "Truncation introduces explicit risk. The architecture therefore models P_coll ~= q(q-1) / 2^(t+1) and requires the truncation length to be selected against the expected collision domain and risk budget.",
+        "A compact commitment should not be treated as collision-free merely because it is cryptographic.",
+        "Where ambiguity is detected, the safe response is to deny or request a longer proof rather than guess."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 46,
+      "category": "encoding-canonicalization-truncation",
+      "question": "Why not simply use a full 256-bit digest everywhere?",
+      "answer": [
+        "Some target transports are severely constrained. The architecture therefore separates full internal protected digests, compact transmitted references, and risk-bounded truncation.",
+        "Where bandwidth is not constrained, a longer commitment may be preferable. Compactness is a profile optimization, not a security requirement."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 47,
+      "category": "control-authority-handover",
+      "question": "How is control-authority handover protected against split brain?",
+      "answer": [
+        "The protected state contains the current controller and a monotonic Control Authority Epoch. A command is accepted only when command.controller equals CurrentController and command.epoch equals CurrentEpoch.",
+        "The intended invariant is that for each governed sink and time, the number of effective ordinary controllers is at most one.",
+        "Crash injection is used to test PREPARE, COMMIT, and ENABLE boundaries."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 48,
+      "category": "control-authority-handover",
+      "question": "What happens if the new controller crashes after the old controller is revoked?",
+      "answer": [
+        "The system may temporarily have zero ordinary controllers, which is safer than having two.",
+        "A Safe-State controller or pre-authorized fallback behavior may remain active.",
+        "The architecture prefers zero ordinary controllers plus safe fallback over two simultaneously authoritative controllers when atomic handover cannot complete."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 49,
+      "category": "control-authority-handover",
+      "question": "Does the repository prove the handover protocol for all distributed-system failures?",
+      "answer": [
+        "No. The finite crash campaign provides evidence about the modeled state machine and tested schedules.",
+        "It is not a formal proof over every network partition, storage failure, Byzantine controller, or hardware reset.",
+        "A production protocol may additionally require model checking or formal verification."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 50,
+      "category": "architecture-principles",
+      "question": "Why is \"evidence is not authority\" emphasized?",
+      "answer": [
+        "Because audit artifacts are attractive bearer objects.",
+        "If a receipt, AER, attestation result, or observer record can later be replayed as execution authority, the architecture has collapsed two different security roles.",
+        "The intended separation is that evidence proves something about a past protected decision, while authority permits a current protected effect. One must not silently substitute for the other."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 51,
+      "category": "deployment-and-scope",
+      "question": "Can the architecture support existing autopilots and drive-by-wire systems without replacing them?",
+      "answer": [
+        "That is the intended deployment model.",
+        "The architecture is designed to sit around the consequence boundary, not to replace stabilization, perception, path planning, navigation, braking control, steering control, certified flight-control loops, or existing failsafes.",
+        "Existing controllers continue to compute. The finality layer determines whether a proposed consequence may become effective under current protected authority."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 52,
+      "category": "deployment-and-scope",
+      "question": "Does the architecture require a new hardware chip?",
+      "answer": [
+        "No single hardware form is mandated. Possible realizations include a safety MCU, a secure MCU, a TEE, a secure element plus enforcement firmware, an FPGA gate, a protected hypervisor partition, an isolated controller, a network or actuator gateway, or a combination of these.",
+        "What matters is whether the deployment actually enforces the required trust and path-completeness properties."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 53,
+      "category": "deployment-and-scope",
+      "question": "Is this an IETF protocol, a hardware architecture, or both?",
+      "answer": [
+        "The work spans both protocol and enforcement concerns, but the IETF-facing material should remain clear about what is being standardized.",
+        "Potentially standardizable pieces include compact evidence formats, BPC structure, canonical binding inputs, Authority References, evidence and key-disclosure records, interoperability semantics, failure signaling, and verification rules.",
+        "Hardware placement examples are architectural deployment guidance unless a specific interface is standardized."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 54,
+      "category": "standards-relevance",
+      "question": "Why is this relevant to RATS?",
+      "answer": [
+        "Remote attestation can provide trusted evidence about the state of a workload, device, or protected component.",
+        "Execution finality can consume that evidence when deciding whether a specific act may become effective: attestation evidence -> protected authority decision -> act-bound execution finality.",
+        "The repository does not assume that RATS alone provides actuation authorization."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 55,
+      "category": "standards-relevance",
+      "question": "Why is this relevant to COSE / CBOR?",
+      "answer": [
+        "Constrained deployments need compact canonical representations, authenticated structures, deterministic serialization, key identifiers, algorithm agility, and interoperable test vectors.",
+        "Those are natural points of contact with CBOR and COSE engineering.",
+        "The execution-finality architecture itself, however, is broader than any one encoding or signature/MAC format."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 56,
+      "category": "claims-and-falsifiability",
+      "question": "What is the strongest claim this repository can responsibly make?",
+      "answer": [
+        "A narrow one: the repository provides an executable reference model and adversarial test harness showing how selected execution-finality invariants can be represented, attacked, and tested under explicit assumptions.",
+        "It does not establish airworthiness, automotive functional-safety certification, hardware non-bypassability, universal cryptographic security, production readiness, regulatory compliance, real-world sensor correctness, or complete correctness under every distributed-system failure."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 57,
+      "category": "claims-and-falsifiability",
+      "question": "What would falsify the architecture rather than merely expose an implementation bug?",
+      "answer": [
+        "Examples include a reproducible demonstration that, under the stated assumptions, a materially different act can pass the same protected binding; a valid proof can be moved to another sink without detection; the same single-use nonce can produce two effective releases; stale revocation state can survive the final protected commit; a receipt can fail to commit while ordinary capability is still released; a public delayed-disclosure value enables pre-disclosure forgery; a stale controller epoch can still become effective; two ordinary controllers can become simultaneously effective under the modeled handover protocol; or an explicitly modeled consequence path bypasses the protected sink.",
+        "Such counterexamples are exactly what the repository is intended to invite."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 58,
+      "category": "review-and-resources",
+      "question": "What type of external review is most useful?",
+      "answer": [
+        "Useful review includes counterexamples to invariants, alternate-path bypass analysis, low-power MCU timing measurements, CAN and CAN-FD mapping experiments, CBOR canonicalization edge cases, packet-loss traces, delayed-disclosure timing attacks, crash-consistency tests, model checking, formal proofs, DAA stale-state scenarios, Safe-State failure analysis, correlated-sensor attacks, and independent implementations using the same test vectors.",
+        "Corrections, negative results, adversarial cases, and implementation criticism are welcome."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 59,
+      "category": "review-and-resources",
+      "question": "Where are the public technical materials?",
+      "answer": [
+        "GitHub reference implementation and red-team harness: https://github.com/sangmdas/UAS-Autonomous-Vehicle-Execution-Finality",
+        "IETF Internet-Draft: https://datatracker.ietf.org/doc/draft-das-drip-uas-act-finality/",
+        "Broader architectural background: https://zenodo.org/records/22082995 (\"The Internet Solved Communication. It Never Solved Authority.\")"
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 60,
+      "category": "architecture-principles",
+      "question": "What is the core principle in one sentence?",
+      "answer": [
+        "Computation, authentication, or possession of a token does not by itself create authority to make a consequential act effective."
+      ],
+      "added_in": "1.0"
+    },
+    {
+      "id": 61,
+      "category": "terminology",
+      "question": "What is a Candidate Act?",
+      "answer": [
+        "A Candidate Act is a concrete, fully specified proposed consequence that has been computed, requested, or authenticated but has not yet been made physically effective.",
+        "The term exists to make an otherwise invisible distinction explicit. In most systems today there is no separate state between 'the software decided to do this' and 'this is happening'; the write to the actuator register is both.",
+        "The architecture inserts that state deliberately. A Candidate Act carries the exact act parameters, the intended sink, and the context on which it depends, and it remains without physical effect until the protected boundary admits it."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 62,
+      "category": "terminology",
+      "question": "What is the Protected Enforcement Domain (PED)?",
+      "answer": [
+        "The PED is the isolated component that verifies a Candidate Act against current protected authority state and controls the physical enablement condition at the sink.",
+        "It is defined by properties, not by a product: key isolation, protected monotonic state, verification logic that the general-purpose stack cannot modify at runtime, and placement on every command-to-enablement path for the acts it governs.",
+        "It may be realized as a safety MCU, secure MCU, TEE, secure element plus enforcement firmware, FPGA gate, hypervisor partition, isolated controller, or actuator gateway. See also the question on whether new hardware is required."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 63,
+      "category": "terminology",
+      "question": "What is an Execution Handle, and why is it not a bearer token?",
+      "answer": [
+        "An Execution Handle is the object that permits one specific act to become effective at one specific sink, under stated freshness and context conditions.",
+        "It is deliberately not a bearer token. Possession is not sufficient: the PED reconstructs the concrete pending act and verifies the handle against that reconstruction, against the sink identity, against current protected state, and against replay state, before consuming it.",
+        "This is what allows a compromised component to hold a syntactically valid object and still be unable to cause an effect."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 64,
+      "category": "terminology",
+      "question": "What is a Finality Sink and a withheld enablement condition?",
+      "answer": [
+        "A Finality Sink is the last point at which a decision can still be prevented from becoming physical: an ESC arming line, a latch solenoid driver, a camera power rail, a power-amplifier enable, a mode register, or a motion-admission gate.",
+        "The withheld enablement condition is the concrete physical thing the actuator lacks until the PED releases it.",
+        "This is the difference between a system where the actuator is always capable and software chooses restraint, and a system where capability itself is conditional. Under compromise, the first offers nothing."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 65,
+      "category": "terminology",
+      "question": "What is the difference between a BPC and an AER? They both look like compact proofs.",
+      "answer": [
+        "They occupy opposite roles and are intentionally non-interchangeable.",
+        "A Beacon Proof Capsule (BPC) is verification INPUT: a compact act-bound and sink-bound representation carried to the enforcement boundary over a constrained link, which the PED evaluates. Receiving one is never a reason to act.",
+        "An Act Evidence Record (AER) is decision OUTPUT: evidence that the PED made a decision. It is emitted after the fact and must never be accepted as a handle.",
+        "Collapsing the two would recreate exactly the bearer-object failure described in the question on why 'evidence is not authority' is emphasized."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 66,
+      "category": "uas-profile",
+      "question": "Which act classes does the UAS profile define, and why those?",
+      "answer": [
+        "The profile defines ARM, KINETIC_ENVELOPE, VOLUME_ENTRY, PAYLOAD_RELEASE, SENSOR_ACTIVATE, RF_EMIT, MODE_TRANSITION, RID_CHANGE, COORDINATED, and a pre-authorized SAFE_STATE class.",
+        "They were selected because each maps to a distinct physical sink with a distinct withheld condition, and because together they cover the consequence types a civil UAS can produce: motion, payload, sensing, emission, mode, identity broadcast, and coordinated multi-aircraft action.",
+        "Most existing geofencing and mode logic is movement-centric only. Payload, sensor, and RF acts are consequential and are usually ungoverned at the actuator."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 67,
+      "category": "uas-profile",
+      "question": "Why is RID_CHANGE treated as hostile to the operator?",
+      "answer": [
+        "Because the enforcement domain is precisely the component that must not be coercible into making the aircraft anonymous.",
+        "A request that would suppress legally required Remote ID transmission is denied unless an authority object explicitly permits the change.",
+        "An enforcement boundary that can be told to stop identifying the aircraft is not an enforcement boundary; it is a feature with an off switch."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 68,
+      "category": "drip-and-remote-id",
+      "question": "What does an Observer actually gain, beyond what DRIP authentication already provides today?",
+      "answer": [
+        "DRIP lets an Observer verify, without Internet access, that Broadcast RID messages come from the registered holder of a DRIP Entity Tag. That is identity and message provenance.",
+        "The compact act-evidence profile adds a different statement: that a protected enforcement domain, endorsed for that identity, recorded an allow, deny, or safe-state decision for an act class and sink class, before the corresponding key could have been disclosed.",
+        "The gain is conduct evidence rather than identity evidence. The limits are stated separately: it does not prove the physical effect occurred, and it does not disclose the act parameters."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 69,
+      "category": "drip-and-remote-id",
+      "question": "Why not simply sign act evidence with the DET key?",
+      "answer": [
+        "Because of where that key lives. On typical airframes the DET or Host Identity key is held by the RID module or the flight software, which is the component whose compromise the mechanism exists to survive.",
+        "Evidence signed with that key demonstrates that the aircraft's software emitted it, not that the enforcement domain decided it. A compromised mission computer holding the RID key could broadcast favourable evidence for acts the PED denied.",
+        "The default profile therefore uses a distinct evidence key sealed in the PED, endorsed once by the Host Identity key for a validity window. Size, rate, and loss behaviour are additional reasons, but origin is the decisive one."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 70,
+      "category": "drip-and-remote-id",
+      "question": "Does this require a new ASTM F3411 or ICAO carriage code point?",
+      "answer": [
+        "The current draft deliberately does not request a DRIP Frame Type or Specific Authentication Method allocation.",
+        "Candidate carriage approaches may require ASTM or ICAO coordination, a future IETF standards effort, or use over Network RID.",
+        "The byte-level record construction is separable from the eventual carriage decision, which is why the two questions are kept apart."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 71,
+      "category": "standards-process",
+      "question": "Is this a DRIP Working Group work item?",
+      "answer": [
+        "No. It is an individual Informational Internet-Draft submitted to the IETF standards process for technical discussion. No working-group adoption or code-point allocation is requested in the current version.",
+        "Relevance was identified to DRIP, RATS, COSE/CBOR, ACE, SCITT, and T2TRG, and the material is also offered to UAS, Remote ID, constrained-security, automotive, and aviation standards forums."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 72,
+      "category": "standards-process",
+      "question": "What is the current status of the draft and the reference implementation?",
+      "answer": [
+        "The Internet-Draft is published at https://datatracker.ietf.org/doc/draft-das-drip-uas-act-finality/ and the reference implementation and red-team harness at https://github.com/sangmdas/UAS-Autonomous-Vehicle-Execution-Finality.",
+        "The draft is Informational and individual. The repository is a reference model and adversarial test harness, not production software.",
+        "Both are expected to change in response to review, including negative review."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 73,
+      "category": "regulatory",
+      "question": "Does implementing this make an operator compliant with Part 107, U-space, or EASA rules?",
+      "answer": [
+        "No. This work does not define airworthiness requirements, certification requirements, or legal rules, and it does not decide which acts a regulator permits.",
+        "It defines how a permission that has already been issued by the competent authority can be technically enforced at the instant of effect, and how that enforcement can be evidenced to parties who did not issue it.",
+        "Compliance remains a matter for the applicable regulator and the applicable certification basis."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 74,
+      "category": "regulatory",
+      "question": "How does this relate to certification standards such as DO-178C, DO-254, ISO 26262, ISO 21448, and UL 4600?",
+      "answer": [
+        "The architecture is complementary to, and dependent on, those processes rather than a substitute for them.",
+        "If the enforcement boundary is placed on a safety-relevant path, its software and hardware fall within the applicable assurance process, and the Safe-State Set, degraded modes, and timing behaviour all become items requiring evidence under that process.",
+        "A useful framing: functional-safety standards address whether the system behaves correctly under fault; this architecture addresses whether an act is authorized at all under current authority. Neither answers the other's question."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 75,
+      "category": "regulatory",
+      "question": "Is there any relationship to the EU AI Act, product liability, or accident investigation?",
+      "answer": [
+        "Potentially, in the sense that receipts and act evidence produce an auditable record of what was decided and when, which is the kind of artifact that oversight, liability analysis, and investigation regimes tend to require.",
+        "The architecture does not claim conformity with any specific instrument, and no regulator has evaluated it. Any such mapping is a matter for the deployment and its legal advisers.",
+        "The technically relevant property is narrow: the record must not be rewritable after the fact, and later disclosure must match the earlier commitment."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 76,
+      "category": "privacy-and-transparency",
+      "question": "What are the data-protection implications of broadcasting per-act evidence over a populated area?",
+      "answer": [
+        "They are real and are the reason the privacy-preserving act class exists.",
+        "A continuous public stream of fine-grained act parameters would create a behavioural record of operations and, indirectly, of the people and places involved. The profile therefore separates the fact that a protected decision occurred from the disclosure of every parameter of the act.",
+        "Deployments should apply data-minimisation to what is broadcast, retain detail in protected local receipts, and disclose that detail through an authorized process rather than over the air.",
+        "The repository does not claim that one privacy profile is appropriate for all jurisdictions."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 77,
+      "category": "keys-and-trust",
+      "question": "Who issues authority objects, and how is trust bootstrapped?",
+      "answer": [
+        "Authority originates outside the aircraft or vehicle: corridor approvals, temporary restrictions, geo-zone data, operator credentials, revocations, and payload or sensor permissions come from service suppliers, authority interfaces, fleet operators, and customers.",
+        "Enrollment binds the enforcement domain's keys to the platform identity, and the platform identity to the operator's registration, through whatever provisioning process the deployment and its regulator accept.",
+        "The architecture assumes this exists and defines what the boundary does with the result. It does not specify a universal enrollment or PKI model, and a weak enrollment process undermines everything downstream."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 78,
+      "category": "keys-and-trust",
+      "question": "How are evidence keys rotated, and what happens when a key chain is exhausted?",
+      "answer": [
+        "Evidence chains are epoch-scoped. A new epoch begins with a fresh protected seed, a fresh chain, a fresh anchor, and a fresh endorsement validity window; the profile requires a new anchor and chain before interval-index reuse rather than attempting to infer a wrapped index.",
+        "Ordinary key rotation for enforcement keys is a deployment matter and should follow the platform's key-management and attestation practice.",
+        "An implementation that permits index wrap requires an unambiguous lifting rule and is outside the profile."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 79,
+      "category": "threat-model-and-residual-risk",
+      "question": "What if GNSS time or position is spoofed?",
+      "answer": [
+        "Both matter, and in different ways.",
+        "Spoofed position is the coherent-context case: if every trusted input feeding the protected predicate agrees and is wrong, the boundary may authorize on false context. This is a stated residual risk, mitigated by source diversity and independence analysis rather than eliminated.",
+        "Spoofed time attacks the evidence profile: delayed disclosure depends on a defensible time model, so an observer requires a bounded timing-uncertainty model and must reject records whose arrival time cannot establish pre-disclosure receipt.",
+        "A deployment that treats an unauthenticated time source as trusted has weakened both properties."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 80,
+      "category": "binding-and-path-completeness",
+      "question": "Does a manual remote-pilot or RC override path bypass the boundary?",
+      "answer": [
+        "If it reaches the actuator without traversing the protected sink, then yes, and the security claim for that path fails. This is the alternate-path problem stated in concrete form.",
+        "Deployments generally must decide explicitly whether manual override is inside or outside the governed set, and document that decision. Safety-increasing actions are normally pre-authorized rather than blocked; permission-expanding manual commands are not privileged merely because a human issued them.",
+        "'A human asked for it' is an origin claim. It is subject to the same distinction between origin and contextual permission as any signed command."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 81,
+      "category": "binding-and-path-completeness",
+      "question": "How are maintenance, bench-test, and firmware-update modes handled?",
+      "answer": [
+        "They are among the most common real bypass paths and must be analyzed as such: maintenance interfaces, debug ports, bench harnesses, and update mechanisms can all reach actuators.",
+        "A deployment should define whether such modes are physically distinguishable from operational mode, whether they require separate protected authority, whether they are available only with the platform immobilized or on a test rig, and how the protected update path for the enforcement domain itself is authorized.",
+        "An enforcement boundary whose own firmware can be replaced through an unprotected path provides no lasting property."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 82,
+      "category": "threat-model-and-residual-risk",
+      "question": "Could this become a remote kill switch, or a tool for grounding fleets?",
+      "answer": [
+        "The concern is legitimate and should be designed against rather than dismissed.",
+        "Three properties of the architecture are relevant. Safety-increasing actions are pre-authorized and are not withheld for lack of fresh authority. Offline operation is bounded rather than instantly revoked. And the boundary is designed to resist being coerced into suppressing required identity broadcast.",
+        "What remains is a governance question: whoever can issue or revoke authority has real power over the platform, and deployments should define who those parties are, what they may revoke, under what process, and what record is produced. This is properly a matter of regulatory and contractual design, not only cryptography."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 83,
+      "category": "threat-model-and-residual-risk",
+      "question": "What stops an operator from configuring the enforcement domain to allow everything?",
+      "answer": [
+        "At the technical level, nothing prevents a party with full physical and provisioning control over a device from deploying a permissive configuration. The architecture cannot make an operator honest.",
+        "What it can do is make the configuration attestable, make decisions evidenced, and make the difference visible to parties who did not issue the authority: an enforcement domain that authorizes everything still produces records, and those records are checkable against the authority that was supposedly in force.",
+        "Enforcement against a hostile operator ultimately relies on registration, attestation, audit, and law, with this layer supplying the evidence those processes need."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 84,
+      "category": "comparison-with-existing-mechanisms",
+      "question": "Why not use a blockchain or distributed ledger for receipts and authority?",
+      "answer": [
+        "The load-bearing requirement is at the actuator, in bounded time, often offline, on a constrained device. Consensus latency, availability assumptions, and connectivity requirements are a poor match for deciding whether a solenoid may energize in the next control period.",
+        "Receipts additionally need to be produced locally and durably before release, not after global agreement.",
+        "Append-only transparency services are relevant later in the pipeline, for audit and non-repudiation of receipts, which is why SCITT is named as a point of contact. That is a different position in the flow from effectuation authority."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 85,
+      "category": "evidence-and-audit",
+      "question": "How do Finality Receipts relate to later audit, insurance claims, and investigation?",
+      "answer": [
+        "A receipt is the protected local record of what was decided, with what basis, at what monotonic position, before release. The compact broadcast record carries only a header and counter, so the two are matched by counter during later analysis.",
+        "This gives investigators and insurers something they do not have today: a per-act record produced by a component separate from the autonomy stack that is usually the subject of the investigation.",
+        "Retention, chain of custody, protected storage, and access process are deployment matters. Evidence of a protected decision is still not evidence of physical occurrence."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 86,
+      "category": "constrained-implementation",
+      "question": "What is the energy and bandwidth overhead on a battery-powered platform?",
+      "answer": [
+        "The evidence path was designed for this constraint: the per-record onboard operation is a single HMAC-SHA-256 rather than a public-key signature, records are fixed-size, and one key-disclosure record per interval is shared by every record in that interval.",
+        "The verification path cost depends on the factors listed under latency, and the repository does not claim a universal figure for either energy or time.",
+        "A deployment should measure both on target hardware, including the cost of protected receipt persistence, which is often the dominant term rather than the cryptography."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 87,
+      "category": "deployment-and-scope",
+      "question": "What is the retrofit story? Can this be added to an existing airframe or vehicle?",
+      "answer": [
+        "It depends entirely on whether the enablement condition can be placed on the real consequence path in that platform.",
+        "Where an actuator enable line, power rail, or gate is physically accessible and the platform's architecture permits a gateway or safety controller in that position, retrofit is conceivable. Where actuation is deeply integrated and no such placement exists, the property cannot be retrofitted honestly, and claiming it would be worse than not having it.",
+        "This is a platform-engineering question, not a protocol question, and it should be answered per platform with an explicit path-completeness analysis."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 88,
+      "category": "deployment-and-scope",
+      "question": "How does this work in multi-tenant fleets, where manufacturer, operator, and customer all have some authority?",
+      "answer": [
+        "The architecture assumes multiple authorities rather than a single one, which is part of why it is relevant to constrained multi-authority work in the IETF.",
+        "A deployment must define which party may authorize which act classes, how conflicting authority is resolved, and which party's revocation is effective for which sink. Control-authority handover with monotonic epochs addresses the specific case of two controllers contending for the same governed sink.",
+        "Unstated authority relationships are a common source of real-world failure, and the boundary makes them explicit rather than resolving them automatically."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 89,
+      "category": "deployment-and-scope",
+      "question": "Does any of this apply to weapons, targeting, or counter-UAS?",
+      "answer": [
+        "No. Weapons, weapon release, targeting, and counter-UAS engagement are explicitly out of scope for this work, which addresses civil UAS and civil autonomous ground vehicles.",
+        "Contributions, profiles, or deployment guidance for those applications are not sought here."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 90,
+      "category": "review-and-resources",
+      "question": "Are there test vectors, and how would two independent implementations be checked against each other?",
+      "answer": [
+        "Interoperability for this kind of mechanism rests on exact bytes: canonical encoding of the binding inputs, the derivation and domain-separation strings, the record layouts, and the verification rules.",
+        "Independent implementations exercising the same vectors, including negative vectors for the indexing and truncation errors the harness tests for, are among the most useful contributions available.",
+        "Discrepancies found this way should be reported as issues against the repository or raised in the relevant standards discussion."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 91,
+      "category": "review-and-resources",
+      "question": "How should a security issue or a counterexample be reported?",
+      "answer": [
+        "Through the repository's issue tracker for implementation defects and reproducible counterexamples, and by direct contact for anything that should not be public before it is understood.",
+        "Counterexamples to the stated invariants are the single most valuable form of contribution, and the falsification list exists to make that target explicit rather than to defend the architecture from it."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 92,
+      "category": "licensing-and-ipr",
+      "question": "Is the architecture patented? What is the licensing posture?",
+      "answer": [
+        "Patent pending. The execution-finality architecture described here is the subject of pending patent applications filed by the author, an independent inventor self-funding the portfolio.",
+        "The specification text and this FAQ are published openly for review; the reference implementation is published under the repository's stated licence. Patent rights are expressly reserved and are not licensed by publication alone.",
+        "Should any part of the architecture be adopted into an IETF standard, the author's declared position is licensing on fair, reasonable, and non-discriminatory terms, consistent with BCP 79 disclosure obligations. The purpose of publishing specification, mathematics, record formats, and runnable code is adoption and scrutiny, not enclosure."
+      ],
+      "added_in": "1.1"
+    },
+    {
+      "id": 93,
+      "category": "architecture-principles",
+      "question": "Does this architecture apply beyond drones and road vehicles?",
+      "answer": [
+        "The invariant is not aviation-specific: an authenticated or correctly computed instruction remains a candidate until the boundary that will make it physical independently verifies the state on which it depends.",
+        "That question recurs wherever software can cause irreversible physical or external effect under multiple authorities: industrial actuation, energy systems, medical devices, maritime and rail systems, robotics, and agentic software systems acting through tools.",
+        "This repository and draft address civil UAS and civil autonomous ground vehicles. Other domains would need their own act classes, sinks, safe states, and profiles, and their own domain expertise."
+      ],
+      "added_in": "1.1"
+    }
+  ],
+  "industry_relevance": [
+    {
+      "sector": "Parcel delivery and last-mile logistics (UAS)",
+      "why_it_matters": "Delivery flights are authorized once, then execute dozens of consequential acts per sortie in populated areas, including the one act that is irreversible in the most literal sense: letting go of the parcel.",
+      "representative_acts": [
+        "PAYLOAD_RELEASE",
+        "VOLUME_ENTRY",
+        "KINETIC_ENVELOPE",
+        "SENSOR_ACTIVATE"
+      ],
+      "typical_sinks": [
+        "latch solenoid or winch driver",
+        "envelope expansion at the enforcement boundary",
+        "motor output register bank"
+      ],
+      "value": "A drop can be made conditional on the drop zone, the current restriction state, and position agreement at the moment of release, rather than on the correctness of the mission computer that planned it."
+    },
+    {
+      "sector": "Infrastructure and asset inspection (UAS)",
+      "why_it_matters": "Inspection operates close to boundaries, near critical assets, and usually with sensors running continuously over third-party property.",
+      "representative_acts": [
+        "SENSOR_ACTIVATE",
+        "KINETIC_ENVELOPE",
+        "RF_EMIT"
+      ],
+      "typical_sinks": [
+        "camera power rail or sensor-output key",
+        "thrust limit",
+        "power-amplifier enable"
+      ],
+      "value": "Boundary-proximity revalidation tightens or reduces the permitted envelope as the aircraft approaches a limit, and sensor activation becomes an authorized act rather than a software setting."
+    },
+    {
+      "sector": "Agriculture and spraying (UAS and ground robots)",
+      "why_it_matters": "Dispersal is externally consequential, legally constrained by parcel and buffer boundaries, and irreversible once released.",
+      "representative_acts": [
+        "PAYLOAD_RELEASE",
+        "KINETIC_ENVELOPE",
+        "VOLUME_ENTRY"
+      ],
+      "typical_sinks": [
+        "pump or valve enable",
+        "motion-admission gate"
+      ],
+      "value": "Buffer-zone compliance becomes a withheld enablement condition rather than a planning assumption, with a per-act record available to the operator and the regulator."
+    },
+    {
+      "sector": "Survey, mapping, and media production (UAS)",
+      "why_it_matters": "The consequential act is often sensing rather than motion, over privacy-sensitive ground, and it is currently ungoverned at the actuator by movement-centric geofencing.",
+      "representative_acts": [
+        "SENSOR_ACTIVATE",
+        "RF_EMIT",
+        "MODE_TRANSITION"
+      ],
+      "typical_sinks": [
+        "camera power rail",
+        "frequency register and PA enable"
+      ],
+      "value": "Capture over a restricted area can be prevented at the rail, and privacy-preserving evidence lets an observer confirm a protected decision occurred without exposing every operational parameter."
+    },
+    {
+      "sector": "Public safety, emergency response, and disaster support",
+      "why_it_matters": "Temporary restrictions appear during a flight, responder authority is granted ad hoc at a scene, and both must expire reliably.",
+      "representative_acts": [
+        "VOLUME_ENTRY",
+        "SAFE_STATE",
+        "COORDINATED",
+        "emergency-scene temporary authority"
+      ],
+      "typical_sinks": [
+        "envelope expansion",
+        "motion-admission gate"
+      ],
+      "value": "Temporary authority is bound to incident, scene, vehicle, bounded exception, concrete motion, expiry, and independent corroboration, and extinguishes automatically when the scene authority ceases to apply."
+    },
+    {
+      "sector": "BVLOS operations and urban air mobility support functions",
+      "why_it_matters": "Beyond visual line of sight removes the human who would otherwise notice; mode transition into autonomous BVLOS is itself a consequential act.",
+      "representative_acts": [
+        "MODE_TRANSITION",
+        "KINETIC_ENVELOPE",
+        "COORDINATED"
+      ],
+      "typical_sinks": [
+        "flight-mode register",
+        "motor output register bank"
+      ],
+      "value": "Link loss becomes a stated, auditable exposure bound instead of an open-ended question about cached authority."
+    },
+    {
+      "sector": "Detect-and-avoid and airspace deconfliction",
+      "why_it_matters": "An avoidance maneuver computed against a conflict picture that has since changed is a well-formed instruction, not a valid resolution.",
+      "representative_acts": [
+        "DAA resolution finality",
+        "KINETIC_ENVELOPE"
+      ],
+      "typical_sinks": [
+        "motion-admission boundary"
+      ],
+      "value": "Resolution authority is bound to the conflict set, ownship state, sink, and a monotonic Resolution Epoch, and is revalidated before the maneuver is admitted."
+    },
+    {
+      "sector": "Autonomous road vehicles and robotaxi fleets",
+      "why_it_matters": "Perception, planning, and remote assistance can all emit correctly authenticated instructions that are wrong for the present context, and a fleet is a shared failure domain.",
+      "representative_acts": [
+        "motion admission",
+        "control-authority handover",
+        "emergency-scene temporary authority"
+      ],
+      "typical_sinks": [
+        "protected motion-admission gate"
+      ],
+      "value": "The boundary coexists with existing perception, planning, braking, steering, and minimal-risk-control functions, and prevents two otherwise-valid controllers from being simultaneously effective over the same sink."
+    },
+    {
+      "sector": "Teleoperation and remote assistance",
+      "why_it_matters": "Handover between an autonomy stack, a remote operator, and a fallback controller is exactly where split-brain authority appears.",
+      "representative_acts": [
+        "control-authority handover",
+        "MODE_TRANSITION"
+      ],
+      "typical_sinks": [
+        "motion-admission gate",
+        "mode register"
+      ],
+      "value": "Monotonic Control Authority Epochs make zero-controller-plus-safe-fallback the failure mode instead of two simultaneously authoritative controllers."
+    },
+    {
+      "sector": "Ports, mining, construction, and other off-highway autonomy",
+      "why_it_matters": "Heavy machinery operating near people, under multiple site authorities, with acts that are irreversible on a human timescale.",
+      "representative_acts": [
+        "motion admission",
+        "implement or load release",
+        "zone entry"
+      ],
+      "typical_sinks": [
+        "hydraulic enable",
+        "drive enable",
+        "motion-admission gate"
+      ],
+      "value": "Site permits and exclusion zones become withheld enablement conditions verified at the machine rather than policies enforced by whichever controller happens to be running."
+    },
+    {
+      "sector": "Warehouse and intralogistics robotics",
+      "why_it_matters": "Dense multi-robot environments with shared floor space, frequent authority changes, and mixed human presence.",
+      "representative_acts": [
+        "motion admission",
+        "COORDINATED",
+        "control-authority handover"
+      ],
+      "typical_sinks": [
+        "drive enable",
+        "motion-admission gate"
+      ],
+      "value": "Composite semantics in which the prepare step moves nothing and HOLD is a physically safe state, rather than an abstract protocol state."
+    },
+    {
+      "sector": "Silicon, secure elements, and safety controllers",
+      "why_it_matters": "The enforcement boundary must be realized in hardware that isolates keys, holds protected monotonic state, and controls a physical enable line.",
+      "representative_acts": [
+        "all classes"
+      ],
+      "typical_sinks": [
+        "gate, rail, or enable line under isolated control"
+      ],
+      "value": "A defined set of properties that a safety MCU, secure element, TEE, FPGA gate, or actuator gateway would need to provide, independent of any one vendor architecture."
+    },
+    {
+      "sector": "Regulators, service suppliers, insurers, and investigators",
+      "why_it_matters": "These parties did not issue the authority and cannot rely on operator telemetry alone.",
+      "representative_acts": [
+        "evidence and receipt consumption"
+      ],
+      "typical_sinks": [
+        "not applicable"
+      ],
+      "value": "Portable, verifiable per-act evidence in defined formats, produced by a component distinct from the autonomy stack that is usually the subject of the inquiry."
+    }
+  ],
+  "use_cases": [
+    {
+      "id": "UC-01",
+      "title": "Restriction activated mid-flight",
+      "scenario": "A delivery aircraft is authorized for a corridor at 14:00. At 14:07 a temporary restriction is activated over part of that corridor for an emergency response. The authorization token held by the ground software remains cryptographically valid.",
+      "gap_today": "Whether the aircraft enters depends on whether new geo-zone data reached, and was obeyed by, software that may be stale or compromised.",
+      "with_execution_finality": "Entry into the next corridor segment is a distinct act. The boundary reads current generation state inside the atomic consume, so the stale-but-valid token does not release the expanded envelope."
+    },
+    {
+      "id": "UC-02",
+      "title": "Compromised mission computer",
+      "scenario": "The perception or planning stack is fed adversarial input, runs a faulty update, or is controlled by an attacker with root access.",
+      "gap_today": "Effective write access to motor registers, ESC arming, the latch driver, or the camera rail turns a software failure into a physical event, and a software geofence on the same processor fails with it.",
+      "with_execution_finality": "The compromised component cannot synthesize actuator authority because it never physically held the enablement condition."
+    },
+    {
+      "id": "UC-03",
+      "title": "Validly signed but contextually unauthorized command",
+      "scenario": "A ground station or fleet service sends a correctly authenticated command to release a payload at an unapproved coordinate or disable identity broadcast.",
+      "gap_today": "Link authentication establishes that the command came from a key holder, not that the act is permitted in the present context.",
+      "with_execution_finality": "The act is verified against current authority, sink, and context before release; identity-suppressing requests are denied unless explicitly permitted."
+    },
+    {
+      "id": "UC-04",
+      "title": "Link loss and unbounded cached authority",
+      "scenario": "The platform loses contact with its operator, service supplier, and revocation source; a revocation is issued after link loss.",
+      "gap_today": "Cached authority may continue permitting acts indefinitely, with no stated exposure.",
+      "with_execution_finality": "Offline authority is bounded by an explicit window, giving computable time and distance exposure, after which only pre-authorized safe states remain."
+    },
+    {
+      "id": "UC-05",
+      "title": "Partially executed coordinated maneuver",
+      "scenario": "Several aircraft must change formation or hand off an inspection segment together, and the coordination log becomes unreachable mid-sequence.",
+      "gap_today": "Some commit and some do not, violating separation assumptions; retries are themselves new physical acts.",
+      "with_execution_finality": "Silence never commits, prepare moves no aircraft, HOLD is a physically safe holding maneuver, and compensation is a new act with new authority rather than an undo."
+    },
+    {
+      "id": "UC-06",
+      "title": "Observer verification on the ground",
+      "scenario": "A police officer or facility operator watches a drone lower a payload and activate a camera over a car park.",
+      "gap_today": "Identity can be verified cryptographically; conduct cannot be verified at all before the fact, and logs are available only afterwards.",
+      "with_execution_finality": "Compact act evidence lets the observer verify, after a short disclosure delay, that the enforcement domain recorded a decision for that act class and sink class before the key could have been disclosed."
+    },
+    {
+      "id": "UC-07",
+      "title": "Stale avoidance maneuver",
+      "scenario": "An avoidance resolution is computed, and before it is executed a new higher-risk intruder appears or an existing track changes materially.",
+      "gap_today": "The maneuver executes on the basis it was computed from, because computation and effectuation are the same step.",
+      "with_execution_finality": "Authority is bound to the conflict set and Resolution Epoch; the motion-admission boundary revalidates before admitting the maneuver."
+    },
+    {
+      "id": "UC-08",
+      "title": "Responder instruction at an incident scene",
+      "scenario": "A first responder directs an autonomous vehicle to perform a bounded exception to ordinary traffic rules at an incident scene.",
+      "gap_today": "Either the vehicle cannot accept the instruction at all, or accepting it depends on general remote-assistance authority with no automatic expiry.",
+      "with_execution_finality": "Temporary authority is bound to incident, scene, vehicle, bounded exception, concrete motion, expiry, and independent corroboration, and extinguishes when the scene authority ceases to apply."
+    },
+    {
+      "id": "UC-09",
+      "title": "Control handover between autonomy, remote operator, and fallback",
+      "scenario": "Control of a vehicle or aircraft moves between the onboard stack, a remote operator, and a fallback controller, and one participant crashes mid-handover.",
+      "gap_today": "Two controllers can be simultaneously effective, or authority can be ambiguous during the transition.",
+      "with_execution_finality": "Protected current-controller state and monotonic epochs bound the effective ordinary controllers to at most one per governed sink, preferring zero plus safe fallback over two."
+    },
+    {
+      "id": "UC-10",
+      "title": "Post-incident investigation",
+      "scenario": "An incident occurs and the investigating party must establish what was authorized, when, and on what basis.",
+      "gap_today": "Evidence comes largely from logs produced by the same stack whose behaviour is in question.",
+      "with_execution_finality": "Protected receipts are produced by the enforcement domain before release and can be matched by counter to broadcast headers observed at the time."
+    }
+  ],
+  "invitation": {
+    "most_useful_contributions": [
+      "Counterexamples to the stated invariants",
+      "Alternate-path bypass analysis on real platforms",
+      "Low-power MCU timing and WCET measurements",
+      "CAN and CAN-FD mapping experiments",
+      "Canonicalization edge cases and negative test vectors",
+      "Delayed-disclosure timing attacks and packet-loss traces",
+      "Crash-consistency testing, model checking, and formal proofs",
+      "Independent implementations exercising the same test vectors"
+    ],
+    "note": "Corrections, negative results, adversarial cases, and implementation criticism are welcome, including on aviation, automotive, and cryptographic assumptions."
+  }
+}
