@@ -1716,7 +1716,7 @@ Repository title:
 
 ---
 
-# Suggested review questions
+# Questions for Reviewers 
 
 Independent reviewers are encouraged to challenge the architecture with concrete counterexamples.
 
